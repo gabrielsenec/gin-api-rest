@@ -92,3 +92,16 @@ func BuscaAlunoPorCPF(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, aluno)
 }
+
+func BuscaAlunoPorRG(c *gin.Context) {
+	var aluno models.Aluno
+	rg := c.Param("rg")
+	database.DB.Where(&models.Aluno{RG: rg}).First(&aluno)
+	if aluno.ID == 0 {
+		c.JSON(http.StatusNotFound, gin.H{
+			"Not Found": "Aluno com rg: " + rg + ", não encontrado",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, aluno)
+}
