@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"gin-api-rest/database"
 	"gin-api-rest/models"
 	"net/http"
@@ -45,4 +46,49 @@ func DetalhaAluno(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, &aluno)
+}
+
+func DeletaAlunoPorId(c *gin.Context) {
+	var aluno models.Aluno
+	id := c.Params.ByName("id")
+	database.DB.First(&aluno, id)
+	if aluno.ID == 0 {
+		c.JSON(http.StatusNotFound, gin.H{
+			"Not Found": "Aluno com id: " + id + ", não existe para deleção",
+		})
+		return
+	}
+	database.DB.Delete(&aluno)
+	c.JSON(http.StatusNoContent, gin.H{
+		"No content": "Aluno com id: " + id + ", foi deletado com sucesso",
+	})
+}
+
+func EditaAluno(c *gin.Context) {
+	var aluno models.Aluno
+	id := c.Params.ByName("id")
+	database.DB.First(&aluno, id)
+	if err := c.ShouldBindJSON(&aluno); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"Error:": err.Error(),
+		})
+		return
+	}
+	database.DB.Model(&aluno).UpdateColumns(aluno)
+	c.JSON(http.StatusOK, aluno)
+
+}
+
+func BuscaAlunoPorCPF(c *gin.Context) {
+	var aluno models.Aluno
+	cpf := c.Param("cpf")
+	database.DB.Where(&models.Aluno{CPF: cpf}).First(&aluno)
+	fmt.Println(aluno)
+	if aluno.ID == 0 {
+		c.JSON(http.StatusNotFound, gin.H{
+			"Not found": "Aluno com cpf: " + cpf + ", não encontrado",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, aluno)
 }
